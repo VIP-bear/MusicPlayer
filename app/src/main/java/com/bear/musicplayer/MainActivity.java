@@ -32,6 +32,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static List<Music> currentMusicList = new ArrayList<>();     // 当前播放音乐列表
+
     public static List<Music> allMusic = new ArrayList<>();     // 所有的音乐
 
     public static List<Music> localMusic = new ArrayList<>();   // 本地的音乐

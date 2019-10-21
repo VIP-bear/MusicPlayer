@@ -1,13 +1,11 @@
 package com.bear.musicplayer;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,16 +20,17 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHolder>
-        implements View.OnClickListener{
+import static com.bear.musicplayer.util.GetMusicInfo.getAlbumArt;
+
+public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHolder>{
 
     private static final String TAG = "SongListAdapter";
 
     private Context mContext;
 
-    private FragmentActivity fragmentActivity;
+    public static FragmentActivity fragmentActivity;
 
-    private List<SongList> mSongList;
+    public static List<SongList> mSongList;
 
     static class ViewHolder extends RecyclerView.ViewHolder{
         ImageView songListImage;
@@ -42,6 +41,15 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
             this.songListImage = itemView.findViewById(R.id.songlist_image);
             this.songListName = itemView.findViewById(R.id.songlist_name);
             this.songListInfo = itemView.findViewById(R.id.songlist_info);
+            // item的点击监听器
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(fragmentActivity, SongListActivity.class);
+                    intent.putExtra("songListName",mSongList.get(getAdapterPosition()).getName());
+                    fragmentActivity.startActivity(intent);
+                }
+            });
         }
     }
 
@@ -58,19 +66,14 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         }
         View view = LayoutInflater.from(mContext).inflate(R.layout.songlist_item,
                 viewGroup, false);
-
         ViewHolder holder = new ViewHolder(view);
-        // item的点击监听器
-        holder.songListImage.setOnClickListener(this);
-        holder.songListInfo.setOnClickListener(this);
-        holder.songListName.setOnClickListener(this);
         return holder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
         SongList songList = mSongList.get(i);
-        viewHolder.songListImage.setImageBitmap(getAlbumArt((int)songList.getImageId()));
+        viewHolder.songListImage.setImageBitmap(getAlbumArt((int)songList.getImageId(), fragmentActivity));
         viewHolder.songListName.setText(songList.getName());
         viewHolder.songListInfo.setText(songList.getInfo());
     }
@@ -78,37 +81,5 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     @Override
     public int getItemCount() {
         return mSongList.size();
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.songlist_image:
-            case R.id.songlist_info:
-            case R.id.songlist_name:
-                Intent intent = new Intent(fragmentActivity, SongListActivity.class);
-                fragmentActivity.startActivity(intent);
-                break;
-                default:
-        }
-    }
-
-    private Bitmap getAlbumArt(int albumId) {
-        String mUriAlbums = "content://media/external/audio/albums";
-        String[] projection = new String[]{"album_art"};
-        Cursor cur = fragmentActivity.getContentResolver().query(Uri.parse(mUriAlbums + "/" + Integer.toString(albumId)), projection, null, null, null);
-        String album_art = null;
-        if (cur.getCount() > 0 && cur.getColumnCount() > 0) {
-            cur.moveToNext();
-            album_art = cur.getString(0);
-        }
-        cur.close();
-        Bitmap bm = null;
-        if (album_art != null) {
-            bm = BitmapFactory.decodeFile(album_art);
-        } else {
-            bm = BitmapFactory.decodeResource(fragmentActivity.getResources(), R.drawable.add);
-        }
-        return bm;
     }
 }

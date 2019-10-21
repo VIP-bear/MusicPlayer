@@ -1,14 +1,80 @@
 package com.bear.musicplayer;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 
-public class SongListActivity extends AppCompatActivity {
+import com.bear.musicplayer.data.Music;
+import com.bear.musicplayer.data.SongList;
+
+import org.litepal.LitePal;
+
+import java.util.ArrayList;
+import java.util.List;
+import static com.bear.musicplayer.MainActivity.currentMusicList;
+
+public class SongListActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private RecyclerView recyclerView;  // 音乐列表
+
+    private ImageButton back;
+
+    private MusicItemAdapter musicItemAdapter;      // 适配器
+
+    private List<Music> musicList = new ArrayList<>();  // 数据
+
+    private static final String TAG = "SongListActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song_list);
+
+        Intent intent = getIntent();
+        getMusicList(intent.getStringExtra("songListName"));
+
+        initLayout();
+        setListener();
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        musicItemAdapter = new MusicItemAdapter(musicList);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(musicItemAdapter);
+
+
+    }
+
+    // 监听器
+    private void setListener(){
+        back.setOnClickListener(this);
+    }
+
+    // 寻找各个控件
+    private void initLayout(){
+        back = findViewById(R.id.back_home);
+        recyclerView = findViewById(R.id.music_list_view);
+    }
+
+    // 从数据库中查询歌单中的歌曲
+    private void getMusicList(String songListName){
+        musicList = LitePal.findAll(Music.class);
+        currentMusicList = musicList;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.back_home:
+                Intent intent = new Intent(SongListActivity.this, MainActivity.class);
+                startActivity(intent);
+                break;
+                default:
+        }
     }
 }
