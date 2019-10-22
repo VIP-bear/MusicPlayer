@@ -12,12 +12,16 @@ import android.widget.ImageButton;
 
 import com.bear.musicplayer.data.Music;
 import com.bear.musicplayer.data.SongList;
+import com.bear.musicplayer.util.GetMusicInfo;
 
 import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 import static com.bear.musicplayer.MainActivity.currentMusicList;
+import static com.bear.musicplayer.MainActivity.localMusic;
+import static com.bear.musicplayer.MainActivity.loveMusic;
+import static org.litepal.tablemanager.Generator.TAG;
 
 public class SongListActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -38,6 +42,7 @@ public class SongListActivity extends AppCompatActivity implements View.OnClickL
 
         Intent intent = getIntent();
         getMusicList(intent.getStringExtra("songListName"));
+        Log.d(TAG, "onCreate: "+"songlist");
 
         initLayout();
         setListener();
@@ -63,7 +68,13 @@ public class SongListActivity extends AppCompatActivity implements View.OnClickL
 
     // 从数据库中查询歌单中的歌曲
     private void getMusicList(String songListName){
-        musicList = LitePal.findAll(Music.class);
+        currentMusicList.clear();
+        GetMusicInfo.getLocalMusic(SongListActivity.this);
+        if (songListName.equals("本地音乐")) {
+            musicList = localMusic;
+        }else {
+            musicList = loveMusic;
+        }
         currentMusicList = musicList;
     }
 
@@ -73,6 +84,7 @@ public class SongListActivity extends AppCompatActivity implements View.OnClickL
             case R.id.back_home:
                 Intent intent = new Intent(SongListActivity.this, MainActivity.class);
                 startActivity(intent);
+                finish();
                 break;
                 default:
         }

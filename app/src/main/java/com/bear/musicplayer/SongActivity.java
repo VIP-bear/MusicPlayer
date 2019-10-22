@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -17,12 +18,15 @@ import android.widget.TextView;
 
 import com.bear.musicplayer.data.Music;
 
+import org.litepal.LitePal;
+
 import java.text.SimpleDateFormat;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.bear.musicplayer.MainActivity.currentMusicList;
+import static com.bear.musicplayer.MyMusicFragment.songListAdapter;
 import static com.bear.musicplayer.util.GetMusicInfo.getAlbumArt;
 
 public class SongActivity extends AppCompatActivity implements View.OnClickListener {
@@ -38,6 +42,8 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton playMode;       // 播放方式
 
     private ImageView albumCover;       // 专辑封面
+
+    private ImageButton loveButton;     // 喜欢
 
     private TextView currentTime, totalTime;    // 当前播放时长和总时长
 
@@ -59,6 +65,8 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
 
     private Random random;
 
+    private Music music;
+
     private SimpleDateFormat format;
 
     @Override
@@ -74,6 +82,11 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         seekBar.setOnSeekBarChangeListener(new MySeekBar());
 
         initMediaPlayer(currentMusicPostion);
+        if (music.getLove() == 1){
+            loveButton.setImageResource(R.drawable.love);
+        }else {
+            loveButton.setImageResource(R.drawable.unlove);
+        }
     }
 
     private void initLayout(){
@@ -87,6 +100,7 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         songName = findViewById(R.id.song_name);
         albumCover = findViewById(R.id.album_cover);
         playMode = findViewById(R.id.play_order);
+        loveButton = findViewById(R.id.love);
 
         format = new SimpleDateFormat("mm:ss");
     }
@@ -97,6 +111,7 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         nextSong.setOnClickListener(this);
         preSong.setOnClickListener(this);
         playMode.setOnClickListener(this);
+        loveButton.setOnClickListener(this);
     }
 
     // 初始化MediaPlayer
@@ -104,7 +119,7 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         try {
             seekBar.setProgress(0);
             mediaPlayer.reset();
-            Music music = currentMusicList.get(position);
+            music = currentMusicList.get(position);
             songName.setText(music.getTitle());
             albumCover.setImageBitmap(getAlbumArt((int)music.getAlbumId(), SongActivity.this));
             mediaPlayer.setDataSource(music.getPath());
@@ -160,6 +175,18 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
                     mode = 0;
                     playMode.setBackgroundResource(R.drawable.orderplay);
                 }
+                break;
+            case R.id.love:
+                Log.d(TAG, "onClick: "+"clicked");
+                if (music.getLove() == 0){
+                    loveButton.setImageResource(R.drawable.love);
+                    music.setLove(1);
+                }else {
+                    loveButton.setImageResource(R.drawable.unlove);
+                    music.setLove(0);
+                }
+                currentMusicList.get(currentMusicPostion).setLove(music.getLove());
+                music.save();
                 break;
             default:
         }

@@ -7,11 +7,20 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.util.Log;
 
+import com.bear.musicplayer.MainActivity;
 import com.bear.musicplayer.R;
 import com.bear.musicplayer.data.Music;
+import com.bear.musicplayer.data.SongList;
+
+import org.litepal.LitePal;
 
 import java.util.List;
+
+import static com.bear.musicplayer.MainActivity.localMusic;
+import static com.bear.musicplayer.MainActivity.loveMusic;
+import static org.litepal.tablemanager.Generator.TAG;
 
 public class GetMusicInfo {
 
@@ -58,7 +67,7 @@ public class GetMusicInfo {
                 music.setFileName(fileName);
                 music.setFileSize(fileSize);
                 music.setDownload(1);
-                music.setSongListName("本地音乐");
+                music.setLove(0);
                 musicList.add(music);
             }
         }
@@ -83,6 +92,41 @@ public class GetMusicInfo {
             bm = BitmapFactory.decodeResource(content.getResources(), R.drawable.add);
         }
         return bm;
+    }
+
+    // 获取本地音乐
+    public static void getLocalMusic(Context context){
+        localMusic.clear();
+        loveMusic.clear();
+        localMusic = LitePal.findAll(Music.class);
+        if (localMusic.isEmpty()) {
+            // 第一次运行程序，将本地音乐保存到数据库,并创建默认的歌单
+            GetMusicInfo.scanMusic(context, localMusic);
+            for (Music music : localMusic){
+                music.save();
+            }
+            SongList songList = new SongList();
+            songList.setSongListId("1");
+            songList.setImageId(localMusic.get(0).getAlbumId());
+            songList.setInfo("共"+localMusic.size()+"首音乐");
+            songList.setName("本地音乐");
+            songList.save();
+
+            SongList loveList = new SongList();
+            loveList.setSongListId("2");
+            if (loveMusic.size() > 0){
+                loveList.setImageId(loveMusic.get(0).getAlbumId());
+            }
+            loveList.setInfo("共" + loveMusic.size() + "首音乐");
+            loveList.setName("我喜欢的音乐");
+            loveList.save();
+        }
+        for (Music music : localMusic){
+            if (music.getLove() == 1){
+                loveMusic.add(music);
+            }
+        }
+        Log.d(TAG, "getLocalMusic: "+loveMusic.size());
     }
 
 }

@@ -21,7 +21,6 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.bear.musicplayer.data.Music;
-import com.bear.musicplayer.data.SongList;
 import com.bear.musicplayer.util.GetMusicInfo;
 import com.google.android.material.navigation.NavigationView;
 
@@ -34,9 +33,9 @@ public class MainActivity extends AppCompatActivity {
 
     public static List<Music> currentMusicList = new ArrayList<>();     // 当前播放音乐列表
 
-    public static List<Music> allMusic = new ArrayList<>();     // 所有的音乐
-
     public static List<Music> localMusic = new ArrayList<>();   // 本地的音乐
+
+    public static List<Music> loveMusic = new ArrayList<>();    // 喜欢的音乐
 
     private Toolbar toolbar;
 
@@ -59,13 +58,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "onCreate: "+"excuted");
+
         // 权限申请
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                     Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }else {
-            getLocalMusic();
+            GetMusicInfo.getLocalMusic(MainActivity.this);
         }
 
         // 创建数据库
@@ -119,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
         viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPagerAdapter.setList(list);
         viewPager.setAdapter(viewPagerAdapter);
+
+        // 下滑
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private void initLayout(){
@@ -134,8 +138,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode){
             case 1:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    getLocalMusic();
-                    MyMusicFragment.update();
+                    GetMusicInfo.getLocalMusic(MainActivity.this);
                 }else {
                     Toast.makeText(MainActivity.this, "拒绝权限将无法使用程序",
                             Toast.LENGTH_SHORT).show();
@@ -170,24 +173,5 @@ public class MainActivity extends AppCompatActivity {
                 default:
         }
         return true;
-    }
-
-    // 获取本地音乐
-    private void getLocalMusic(){
-        localMusic.clear();
-        localMusic = LitePal.findAll(Music.class);
-        if (localMusic.isEmpty()) {
-            // 第一次运行程序，将本地音乐保存到数据库,并创建默认的歌单
-            GetMusicInfo.scanMusic(MainActivity.this, localMusic);
-            for (Music music : localMusic){
-                music.save();
-            }
-            SongList songList = new SongList();
-            songList.setSongListId("1");
-            songList.setImageId(localMusic.get(0).getAlbumId());
-            songList.setInfo("共"+localMusic.size()+"首，已下载"+localMusic.size()+"首");
-            songList.setName("本地音乐");
-            Log.d(TAG, "getLocalMusic: "+songList.save());
-        }
     }
 }

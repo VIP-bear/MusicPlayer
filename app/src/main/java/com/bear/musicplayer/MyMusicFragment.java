@@ -1,12 +1,15 @@
 package com.bear.musicplayer;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bear.musicplayer.data.Music;
 import com.bear.musicplayer.data.SongList;
+import com.bear.musicplayer.util.GetMusicInfo;
 
 import org.litepal.LitePal;
 
@@ -19,8 +22,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import static com.bear.musicplayer.MainActivity.localMusic;
+import static com.bear.musicplayer.MainActivity.loveMusic;
+
 public class MyMusicFragment extends Fragment {
 
+    private Context context = getActivity();
     private RecyclerView songListView;  // 歌单列表
 
     public static List<SongList> songLists = new ArrayList<>();
@@ -48,13 +55,20 @@ public class MyMusicFragment extends Fragment {
     }
     // 从数据库中获取歌单列表信息
     public static void initSongLists(){
+        localMusic.clear();
+        loveMusic.clear();
         songLists.clear();
+        localMusic = LitePal.findAll(Music.class);
+        for (Music music : localMusic){
+            if (music.getLove() == 1){
+                loveMusic.add(music);
+            }
+        }
         songLists = LitePal.findAll(SongList.class);
-        Log.d(TAG, "initSongLists: "+songLists.size());
-    }
-    // 刷新界面
-    public static void update(){
-        initSongLists();
-        songListAdapter.notifyDataSetChanged();
+        if (loveMusic.size() != 0) {
+            songLists.get(1).setImageId(loveMusic.get(0).getAlbumId());
+            songLists.get(1).setInfo("共" + loveMusic.size() + "首音乐");
+            songLists.get(1).save();
+        }
     }
 }

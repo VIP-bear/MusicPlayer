@@ -7,9 +7,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bear.musicplayer.data.Music;
+import com.bear.musicplayer.util.GetMusicInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +26,12 @@ public class MusicItemAdapter extends RecyclerView.Adapter<MusicItemAdapter.View
     public static Context mContext;
 
     static class ViewHolder extends RecyclerView.ViewHolder{
+        ImageView musicImage;
         TextView musicName;
         TextView musicAuthor;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            this.musicImage = itemView.findViewById(R.id.music_image);
             this.musicName = itemView.findViewById(R.id.music_name);
             this.musicAuthor = itemView.findViewById(R.id.music_author);
             // item点击事件
@@ -66,6 +70,7 @@ public class MusicItemAdapter extends RecyclerView.Adapter<MusicItemAdapter.View
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Music music = musicList.get(position);
+        holder.musicImage.setImageBitmap(GetMusicInfo.getAlbumArt((int)music.getAlbumId(), mContext));
         holder.musicName.setText(music.getTitle());
         holder.musicAuthor.setText(music.getAritist() + "-" + music.getAlbum());
     }
